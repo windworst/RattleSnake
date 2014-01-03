@@ -14,7 +14,7 @@ def getipaddr(ifname):
 	)[20:24])
 
 ip_str = socket.gethostbyname(socket.gethostname())
-if ip_str.index('127') >=0 :
+if '127' in ip_str >=0 :
 	try:
 		ip_str = getipaddr('eth0')
 	except:
