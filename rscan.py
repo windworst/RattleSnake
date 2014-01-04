@@ -7,71 +7,6 @@ import struct
 import threading
 import sys
 
-# # # # # # # # # # iterator # # # # # # # # # #
-
-'''
-list iterator
-list of range
-list_iter([[1,5],[6,9]]) -> 1 2 3 4 5 6 7 8 9
-'''
-class list_iter:
-	list = 0
-	list_iter = 0
-	current = 0
-	end = 0
-	step = 1
-
-	def __init__(self,list):
-		self.list = list
-		self.reset()
-
-	def __iter__(self):
-		return self
-	
-	def reset(self):
-		self.list_iter = iter(self.list)
-		self.current,self.end = self.list_iter.next()
-
-	def next(self):
-		if self.current<=self.end:
-			current = self.current
-			self.current = self.current + self.step
-			return current
-		else:
-			self.current,self.end = self.list_iter.next()
-			return self.next()
-		
-'''
-IP+Port Iterator
-Return (ip,port)
-'''
-class ipport_iter:
-	current_ip = 0
-	ip_iter = 0
-	port_iter = 0
-
-	def __init__(self,ip_iter,port_iter):
-		self.ip_iter = ip_iter
-		self.port_iter = port_iter
-		self.reset()
-	
-	def __iter__(self):
-		return self
-
-	def reset(self):
-		self.ip_iter.reset()
-		self.port_iter.reset()
-		self.current_ip = self.ip_iter.next()
-
-	def next(self):
-		try:
-			ret = (self.current_ip,self.port_iter.next())
-		except:
-			self.current_ip = self.ip_iter.next()
-			self.port_iter.reset()
-			ret =  (self.current_ip,self.port_iter.next())
-		return ret
-
 # # # # # # Socket Function # # # # # # # # 
 
 # ip value to ip str
@@ -117,7 +52,6 @@ def open_threads(runner,thread_num):
 
 
 # # # # # # # # scanner # # # # # # # # # # 
-
 
 #connector: need function connect(ip,port),return link report
 
@@ -203,6 +137,71 @@ class scanner:
 				self.save_result(ip_str,port,report)
 			self.data_mutex.release()
 
+# # # # # # # # # # iterator # # # # # # # # # #
+
+'''
+list iterator
+list of range
+list_iter([[1,5],[6,9]]) -> 1 2 3 4 5 6 7 8 9
+'''
+class list_iter:
+	list = 0
+	list_iter = 0
+	current = 0
+	end = 0
+	step = 1
+
+	def __init__(self,list):
+		self.list = list
+		self.reset()
+
+	def __iter__(self):
+		return self
+	
+	def reset(self):
+		self.list_iter = iter(self.list)
+		self.current,self.end = self.list_iter.next()
+
+	def next(self):
+		if self.current<=self.end:
+			current = self.current
+			self.current = self.current + self.step
+			return current
+		else:
+			self.current,self.end = self.list_iter.next()
+			return self.next()
+		
+'''
+IP+Port Iterator
+Return (ip,port)
+'''
+class ipport_iter:
+	current_ip = 0
+	ip_iter = 0
+	port_iter = 0
+
+	def __init__(self,ip_iter,port_iter):
+		self.ip_iter = ip_iter
+		self.port_iter = port_iter
+		self.reset()
+	
+	def __iter__(self):
+		return self
+
+	def reset(self):
+		self.ip_iter.reset()
+		self.port_iter.reset()
+		self.current_ip = self.ip_iter.next()
+
+	def next(self):
+		try:
+			ret = (self.current_ip,self.port_iter.next())
+		except:
+			self.current_ip = self.ip_iter.next()
+			self.port_iter.reset()
+			ret =  (self.current_ip,self.port_iter.next())
+		return ret
+
 # # # # # # # # # # # # # # # # # # # # # # 
 
 '''
@@ -225,11 +224,10 @@ ports =
 
 '''
 
-def scanner_factory(ips,ports,connector):
+def iter_factory(ips,ports):
 	ip_iter = list_iter(ips)
 	port_iter = list_iter(ports)
-	addr_iter = ipport_iter(ip_iter,port_iter)
-	return scanner(addr_iter,connector)
+	return ipport_iter(ip_iter,port_iter)
 
 # # # # # # # # # # # # # # # # # # # # # # 
 
@@ -304,9 +302,11 @@ def scan():
 	global s_thread,s_timeout,s_ips,s_ports,s_result,s_connector
 	s_connector.timeout = s_timeout
 	try:
-		s = scanner_factory(s_ips,s_ports,s_connector)
+		ipport_iter = iter_factory(s_ips,s_ports)
 	except:
 		sys.stdout.write ('IP/PORT Setting Error\n')
+		return
+	s = scanner(ipport_iter,s_connector)
 	s.timeout = s_timeout
 	t =  time.clock()
 	open_threads(s,s_thread)

@@ -1,0 +1,29 @@
+Rattle Snake v1.0
+CopyRight (c) 2014
+
+Description
+===========
+A Port Scanner.Homework of the first day I learn Python.
+You can use it to scan open port of network hosts in the ip range you set,and save open port list to log file.
+
+Command-Line Option
+===================
+addip(): add ip range you will scan
+	eg:  addip('192.168.1.1')
+		 addip('192.168.1.1','192.168.255.255')
+addport(): add port range you will scan
+	eg:	 addport(80)
+		 addport(135,139)
+You can use help() to learn more
+
+
+Versions History
+================
+
+*Version 1.0
+First release
+
+
+Feedback
+========
+Some problem, mailto:windworst@gmail.com
