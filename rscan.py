@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*- 
-#DONE: 2014/1/1, "tail" of "Snake" year (2013)
-#It's first day I learn Python
 
-import socket
-import struct
-import threading
 import sys
 
 # # # # # # Socket Function # # # # # # # # 
+
+import socket
+import struct
 
 # ip value to ip str
 def ipint2str(ipvalue):
@@ -18,6 +16,8 @@ def ipstr2int(ip):
     return struct.unpack('!I', socket.inet_aton(socket.gethostbyname(ip)))[0]
 
 # # # # # # # # Thread Func # # # # # # # # 
+
+import threading
 
 def thread_proc(runner):
 	runner.run()
@@ -59,6 +59,7 @@ class runner:
 	#args: start instance in multi-threads
 	def __init__(self,connector):
 		self.connector = connector
+		self.still_run = False
 
 	def run(self):
 		while self.still_run:
@@ -74,14 +75,17 @@ class portchecker:
 	ipport_iter = 0
 	result = []
 
-	data_mutex = threading.Lock()
-	iter_mutex = threading.Lock()
+	data_mutex = 0
+	iter_mutex = 0
 	scanned_portnum = 0
 	open_portnum = 0
 
 	def __init__(self,ipport_iter,timeout = 5):
 		self.ipport_iter = ipport_iter
 		self.timeout = timeout
+		self.data_mutex = threading.Lock()
+		self.iter_mutex = threading.Lock()
+		self.result = []
 
 	def find_a_port(self,ip,port,result):
 		clean_str = '\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b'
@@ -113,28 +117,29 @@ class portchecker:
 
 	def __call__(self):
 		# get ip:port from iterator			
+		ip = 0
+		port = 0
 		try:
 			self.iter_mutex.acquire()
 			ip,port = self.ipport_iter.next()
-			ip_str = ipint2str(ip)
 		except:
 			return False
 		finally:	
 			self.iter_mutex.release()
 
 		self.data_mutex.acquire()
-		self.on_scanning(ip_str,port)
+		self.on_scanning(ip,port)
 		self.data_mutex.release()
 
 		# link ip:port,get link report
-		report = self.connect(ip_str,port)
+		report = self.connect(ip,port)
 
 		self.data_mutex.acquire()
 		self.scanned_portnum += 1
 		if report :
 			self.open_portnum += 1
-			self.find_a_port(ip_str,port,report)
-			self.save_result(ip_str,port,report)
+			self.find_a_port(ip,port,report)
+			self.save_result(ip,port,report)
 		self.data_mutex.release()
 		return True
 
@@ -197,11 +202,11 @@ class ipport_iter:
 
 	def next(self):
 		try:
-			ret = (self.current_ip,self.port_iter.next())
+			ret = (ipint2str(self.current_ip),self.port_iter.next())
 		except:
 			self.current_ip = self.ip_iter.next()
 			self.port_iter.reset()
-			ret =  (self.current_ip,self.port_iter.next())
+			ret =  (ipint2str(self.current_ip),self.port_iter.next())
 		return ret
 
 # # # # # # # # # # # # # # # # # # # # # # 
@@ -237,6 +242,7 @@ def iter_factory(ips,ports):
 
 s_ips = []
 s_ports = []
+s_addrlist = []
 s_timeout = 5
 s_thread = 100
 s_result = []
@@ -251,12 +257,102 @@ def addip(ipstart_str,ipend_str=''):
 	item = [ipstart,ipend]
 	s_ips.append(item)
 
+def readiplist(listfile):
+	print 'File',listfile,
+	try:
+		f = open(listfile,'r')
+		print 'Read Success',
+	except:
+		print 'Read Failed'
+		return
+	total = 0
+	for line in f.readlines():
+		if line[-1] == '\n':
+			line = line[0:-1]		
+		ip1 = 0
+		ip2 = 0
+		ips_iter = iter(line.split(' '))
+		try:
+			ip1 = ips_iter.next()
+			ip2 = ips_iter.next()
+		except:
+			ip2 = ip1
+
+		if ip2:
+			total += 1
+			addip(ip1,ip2)
+		else:
+			break
+	print 'Add',total,'ip range'
+
 def addport(portstart,portend=0):
 	global s_ports
 	if portend==0:
 		portend = portstart
 	item = [portstart,portend]
 	s_ports.append(item)
+
+import string
+def readportlist(listfile):
+	print 'File',listfile,
+	try:
+		f = open(listfile,'r')
+		print 'Read Success',
+	except:
+		print 'Read Failed'
+		return
+	total = 0
+	for line in f.readlines():
+		if line[-1] == '\n':
+			line = line[0:-1]
+		port1 = 0
+		port2 = 0
+		ports_iter = iter(line.split(' '))
+		try:
+			port1 = ports_iter.next()
+			port2 = ports_iter.next()
+		except:
+			port2 = port1
+
+		if port2:
+			total += 1
+			port1 = string.atoi(port1)
+			port2 = string.atoi(port2)
+			addport(port1,port2)
+		else:
+			break
+	print 'Add',total,'port range'
+
+def addaddr(ip,port):
+	global s_addrlist
+	item = [ip,port]
+	s_addrlist.append(item)
+
+def readaddrlist(listfile):
+	print 'File',listfile,
+	try:
+		f = open(listfile,'r')
+		print 'Read Success',
+	except:
+		print 'Read Failed'
+		return
+	total = 0
+	for line in f.readlines():
+		if line[-1] == '\n':
+			line = line[0:-1]
+		ip = 0
+		port = 0
+		addr_iter = iter(line.split(':'))
+		try:
+			ip = addr_iter.next()
+			port = addr_iter.next()
+		except:
+			break
+
+		total += 1
+		port = string.atoi(port)
+		addaddr(ip,port)
+	print 'Add',total,'addr'
 
 def cleanip():
 	global s_ips
@@ -265,6 +361,10 @@ def cleanip():
 def cleanport():
 	global s_ports
 	s_ports = []
+
+def cleanaddr():
+	global s_addrlist
+	s_addrlist = []
 
 def settimeout(value):
 	global s_timeout
@@ -286,7 +386,7 @@ def save(path):
 		print 'Save Failed'
 
 def status():
-	global s_ips,s_ports,s_timeout,s_thread
+	global s_ips,s_ports,s_timeout,s_thread,s_addrlist
 	print '\nStatus:'
 	print ' ips:'
 	for ip1,ip2 in s_ips:
@@ -294,34 +394,60 @@ def status():
 	print ' ports:'
 	for port1,port2 in s_ports:
 		print '   [\'%s\',\'%s\']' % ( port1,port2 )
+	print ' addrs:'
+	for ip,port in s_addrlist:
+		print '   [\'%s\':%d]' % ( ip,port )
 	print ' Timeout:',s_timeout
 	print ' Thread:',s_thread
 	print ''
 
 import time
 def scan():
-	global s_thread,s_timeout,s_ips,s_ports,s_result
+	global s_thread,s_timeout,s_ips,s_ports,s_addrlist,s_result
+
+	if (len(s_ips)==0 or len(s_ports)==0) and len(s_addrlist)==0 :
+		sys.stdout.write ('You Scan Nothing\n')
+		return
+
+	conn1 = 0
+	conn2 = 0
 	try:
 		ipport_iter = iter_factory(s_ips,s_ports)
+		conn1 = portchecker(ipport_iter,s_timeout)
 	except:
-		sys.stdout.write ('IP/PORT Setting Error\n')
-		return
-	conn = portchecker(ipport_iter,s_timeout)
-	r = runner(conn)
+		pass
+
+	if len(s_addrlist):
+		conn2 = portchecker(iter(s_addrlist),s_timeout)
+
+	s_result = []
+
 	t =  time.clock()
-	open_threads(r,s_thread)
+	if conn1:
+		r1 = runner(conn1)
+		open_threads(r1,s_thread)
+		s_result.extend(conn1.result)
+	if conn2:
+		r2 = runner(conn2)
+		open_threads(r2,s_thread)
+		s_result.extend(conn2.result)
 	t = time.clock() - t
-	s_result = conn.result
+
 	sys.stdout.write( '\nTotal Time: %.4lfs\n'%(t) )
 
 def help():
-	print '-------Rattlesnake 1.0 By Chaser---------'
+	print '-------Rattlesnake 1.1 By Chaser---------'
 	print 'I\'m a Port Scanner in Python (PC or Android)\n'
 	print 'usage: python -i me.py\n'
 	print '	addip(ip,[endip]): add ip range'
-	print '	addport(port,[endport]): add port range\n'
+	print '	addport(port,[endport]): add port range'
+	print '	addaddr(ip,port): add addr (ip,port)\n'
+	print '	readiplist(listfile): read ip list from file'
+	print '	readportlist(listfile): read port list from file'
+	print '	readaddrlist(listfile): read addr list from file\n'
 	print '	cleanip(): clean ip range list'
-	print '	cleanport(): clean port range list\n'
+	print '	cleanport(): clean port range list'
+	print '	cleanaddr(): clean addr list\n'
 	print '	setthread(value): set thread num'
 	print '	settimeout(value): set timeout value\n'
 	print '	status(): watch the value you set\n'

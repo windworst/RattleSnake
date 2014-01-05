@@ -20,6 +20,13 @@ You can use help() to learn more
 Versions History
 ================
 
+*Version 1.1
+add: addr (ip:port) check. (before is ip-ranges & port-ranges scan) 
+add: read list from file: read***list(listfile)
+	read ip ranges from file
+	read port ranges from file
+	read addr list from file
+
 *Version 1.0
 First release
 
