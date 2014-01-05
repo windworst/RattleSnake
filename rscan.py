@@ -50,43 +50,38 @@ def open_threads(runner,thread_num):
 			break
 	runner.still_run = False
 
+#multi-threads runner
 
-# # # # # # # # scanner # # # # # # # # # # 
-
-#connector: need function connect(ip,port),return link report
-
-class simple_connector:
-	timeout = 5
-	def connect(self,ip,port):
-		s = socket.socket()
-		s.settimeout(self.timeout)
-		result = ''
-		try:
-			s.connect((ip,port))
-			result = ('%s:%d' % (ip,port))
-		except:
-			pass
-		s.close()
-		return result
-
-#scanner
-
-class scanner:
-	ipport_iter = 0
-	result = []
+class runner:
 	still_run = False
 	connector = 0
-	
+
+	#args: start instance in multi-threads
+	def __init__(self,connector):
+		self.connector = connector
+
+	def run(self):
+		while self.still_run:
+			if not self.connector():
+				break
+
+# # # # # # # # # # # # # # # # # # # # # # # # 
+
+#portchecker: check ports
+
+class portchecker:
+	timeout = 0
+	ipport_iter = 0
+	result = []
+
 	data_mutex = threading.Lock()
 	iter_mutex = threading.Lock()
 	scanned_portnum = 0
 	open_portnum = 0
 
-	#args:	ipport_iter:get ip:port
-	#		connector: need function connect(ip,port),return link report
-	def __init__(self,ipport_iter,connector):
+	def __init__(self,ipport_iter,timeout = 5):
 		self.ipport_iter = ipport_iter
-		self.connector = connector
+		self.timeout = timeout
 
 	def find_a_port(self,ip,port,result):
 		clean_str = '\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b'
@@ -101,41 +96,48 @@ class scanner:
 		sys.stdout.write ('%sOpen:%d,Scanned:%d                 ' % (clean_str,self.open_portnum,self.scanned_portnum),)
 		sys.stdout.flush()
 
+	def connect(self,ip,port):
+		s = socket.socket()
+		s.settimeout(self.timeout)
+		result = ''
+		try:
+			s.connect((ip,port))
+			result = ('%s:%d' % (ip,port))
+		except:
+			pass
+		s.close()
+		return result
+
 	def save_result(self,ip,port,report): 
 		self.result.append(report)
 
-	def run(self):
-		while self.still_run:
-			# get ip:port from iterator			
-			try:
-				self.iter_mutex.acquire()
-				ip,port = self.ipport_iter.next()
-				ip_str = ipint2str(ip)
-			except:
-				break
-			finally:	
-				self.iter_mutex.release()
+	def __call__(self):
+		# get ip:port from iterator			
+		try:
+			self.iter_mutex.acquire()
+			ip,port = self.ipport_iter.next()
+			ip_str = ipint2str(ip)
+		except:
+			return False
+		finally:	
+			self.iter_mutex.release()
 
-			if not self.still_run:
-				break
-			
-			self.data_mutex.acquire()
-			self.on_scanning(ip_str,port)
-			self.data_mutex.release()
-			
-			# link ip:port,get link report
-			report = self.connector.connect(ip_str,port)
+		self.data_mutex.acquire()
+		self.on_scanning(ip_str,port)
+		self.data_mutex.release()
 
-			if not self.still_run:
-				break
-				
-			self.data_mutex.acquire()
-			self.scanned_portnum += 1
-			if report :
-				self.open_portnum += 1
-				self.find_a_port(ip_str,port,report)
-				self.save_result(ip_str,port,report)
-			self.data_mutex.release()
+		# link ip:port,get link report
+		report = self.connect(ip_str,port)
+
+		self.data_mutex.acquire()
+		self.scanned_portnum += 1
+		if report :
+			self.open_portnum += 1
+			self.find_a_port(ip_str,port,report)
+			self.save_result(ip_str,port,report)
+		self.data_mutex.release()
+		return True
+
 
 # # # # # # # # # # iterator # # # # # # # # # #
 
@@ -157,7 +159,7 @@ class list_iter:
 
 	def __iter__(self):
 		return self
-	
+
 	def reset(self):
 		self.list_iter = iter(self.list)
 		self.current,self.end = self.list_iter.next()
@@ -170,7 +172,7 @@ class list_iter:
 		else:
 			self.current,self.end = self.list_iter.next()
 			return self.next()
-		
+
 '''
 IP+Port Iterator
 Return (ip,port)
@@ -184,7 +186,7 @@ class ipport_iter:
 		self.ip_iter = ip_iter
 		self.port_iter = port_iter
 		self.reset()
-	
+
 	def __iter__(self):
 		return self
 
@@ -238,7 +240,6 @@ s_ports = []
 s_timeout = 5
 s_thread = 100
 s_result = []
-s_connector = simple_connector()
 
 def addip(ipstart_str,ipend_str=''):
 	global s_ips
@@ -283,7 +284,7 @@ def save(path):
 		print 'Save Success'
 	except:
 		print 'Save Failed'
-	
+
 def status():
 	global s_ips,s_ports,s_timeout,s_thread
 	print '\nStatus:'
@@ -299,19 +300,18 @@ def status():
 
 import time
 def scan():
-	global s_thread,s_timeout,s_ips,s_ports,s_result,s_connector
-	s_connector.timeout = s_timeout
+	global s_thread,s_timeout,s_ips,s_ports,s_result
 	try:
 		ipport_iter = iter_factory(s_ips,s_ports)
 	except:
 		sys.stdout.write ('IP/PORT Setting Error\n')
 		return
-	s = scanner(ipport_iter,s_connector)
-	s.timeout = s_timeout
+	conn = portchecker(ipport_iter,s_timeout)
+	r = runner(conn)
 	t =  time.clock()
-	open_threads(s,s_thread)
+	open_threads(r,s_thread)
 	t = time.clock() - t
-	s_result = s.result
+	s_result = conn.result
 	sys.stdout.write( '\nTotal Time: %.4lfs\n'%(t) )
 
 def help():
