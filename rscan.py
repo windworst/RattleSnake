@@ -438,7 +438,7 @@ def save(path):
 	global s_result
 	try:
 		print 'File',path,
-		output = open(path,'w')
+		output = open(path,'a')
 		for s in s_result:
 			output.write(s+'\n')
 		print 'Save Success'
@@ -446,24 +446,23 @@ def save(path):
 		print 'Save Failed'
 
 import time
-def scan():
-	global s_thread,s_timeout,s_result
-
-	host_iter = host_iterator()
-	
-	if not host_iter:
-		print 'Host list Empty, Please check'
-		return
-
-	conn = portchecker(host_iter,s_timeout)
+def rscanner(conn):
+	global s_thread,s_result
 	r = runner(conn)
-
 	t =  time.clock()
 	open_threads(r,s_thread)
 	s_result = conn.result
 	t = time.clock() - t
-
 	sys.stdout.write( '\nTotal Time: %.4lfs\n'%(t) )
+
+def scan():
+	global s_timeout
+	host_iter = host_iterator()
+	if not host_iter:
+		print 'Host list Empty, Please check'
+		return
+	conn = portchecker(host_iter,s_timeout)
+	rscanner(conn)
 
 class data_sender:
 	data = 0
@@ -507,7 +506,6 @@ class data_sender:
 		return True
 
 import os
-
 def loadfile(filepath):
 	data = 0
 	try:
