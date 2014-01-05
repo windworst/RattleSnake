@@ -298,7 +298,7 @@ def readiplist(listfile):
 		print 'Read Success',
 	except:
 		print 'Read Failed'
-		return
+		return False
 	total = 0
 	for line in f.readlines():
 		if line[-1] == '\n':
@@ -318,6 +318,7 @@ def readiplist(listfile):
 		else:
 			break
 	print 'Add',total,'ip range'
+	return True
 
 def addport(portstart,portend=0):
 	global s_ports
@@ -333,7 +334,7 @@ def readportlist(listfile):
 		print 'Read Success',
 	except:
 		print 'Read Failed'
-		return
+		return False
 	total = 0
 	for line in f.readlines():
 		if line[-1] == '\n':
@@ -355,6 +356,7 @@ def readportlist(listfile):
 		else:
 			break
 	print 'Add',total,'port range'
+	return True
 
 def addaddr(ip,port):
 	global s_addrlist
@@ -368,7 +370,7 @@ def readaddrlist(listfile):
 		print 'Read Success',
 	except:
 		print 'Read Failed'
-		return
+		return False
 	total = 0
 	for line in f.readlines():
 		if line[-1] == '\n':
@@ -386,6 +388,7 @@ def readaddrlist(listfile):
 		port = string.atoi(port)
 		addaddr(ip,port)
 	print 'Add',total,'addr'
+	return True
 
 def addresult():
 	global s_addrlist,s_result
