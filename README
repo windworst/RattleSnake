@@ -20,6 +20,11 @@ You can use help() to learn more
 Versions History
 ================
 
+*Version 1.2
+add: senddata to hosts
+	 support load data from file/socket
+	 and send data to hosts in list until you Ctrl+C
+
 *Version 1.1
 add: addr (ip:port) check. (before is ip-ranges & port-ranges scan) 
 add: read list from file: read***list(listfile)

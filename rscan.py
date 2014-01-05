@@ -1,20 +1,5 @@
 # -*- coding: utf-8 -*- 
 
-import sys
-
-# # # # # # Socket Function # # # # # # # # 
-
-import socket
-import struct
-
-# ip value to ip str
-def ipint2str(ipvalue):
-	return socket.inet_ntoa(struct.pack("!I",ipvalue))
-
-# ip str to ip value
-def ipstr2int(ip):
-    return struct.unpack('!I', socket.inet_aton(socket.gethostbyname(ip)))[0]
-
 # # # # # # # # Thread Func # # # # # # # # 
 
 import threading
@@ -66,9 +51,23 @@ class runner:
 			if not self.connector():
 				break
 
+# # # # # # Socket Function # # # # # # # # 
+
+import socket
+import struct
+
+# ip value to ip str
+def ipint2str(ipvalue):
+	return socket.inet_ntoa(struct.pack("!I",ipvalue))
+
+# ip str to ip value
+def ipstr2int(ip):
+    return struct.unpack('!I', socket.inet_aton(socket.gethostbyname(ip)))[0]
+
 # # # # # # # # # # # # # # # # # # # # # # # # 
 
 #portchecker: check ports
+import sys
 
 class portchecker:
 	timeout = 0
@@ -91,13 +90,13 @@ class portchecker:
 		clean_str = '\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b'
 		clean_str += clean_str
 		sys.stdout.write ('%s%s                             \n' % (clean_str,result))
-		sys.stdout.write ('%sOpen:%d,Scanned:%d                 ' % (clean_str,self.open_portnum,self.scanned_portnum),)
+		sys.stdout.write ('%sOpen:%d,Scanned:%d                 ' % (clean_str,self.open_portnum,self.scanned_portnum))
 		sys.stdout.flush()
 		
 	def on_scanning(self,ip,port):
 		clean_str = '\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b'
 		clean_str += clean_str
-		sys.stdout.write ('%sOpen:%d,Scanned:%d                 ' % (clean_str,self.open_portnum,self.scanned_portnum),)
+		sys.stdout.write ('%sOpen:%d,Scanned:%d                 ' % (clean_str,self.open_portnum,self.scanned_portnum))
 		sys.stdout.flush()
 
 	def connect(self,ip,port):
@@ -146,14 +145,31 @@ class portchecker:
 
 # # # # # # # # # # iterator # # # # # # # # # #
 
+#iterlist_iter:  iterate in list of iterator
+
+class iterlist_iter:
+	current = 0
+	iterlist_iter = 0
+	def __init__(self,iterator_list):
+		self.iterlist_iter = iter(iterator_list)
+		self.current = self.iterlist_iter.next()
+	def __self__(self):
+		return self
+	def next(self):
+		try:
+			return self.current.next()
+		except:
+			self.current = self.iterlist_iter.next()
+		return self.current.next()
+
 '''
 list iterator
 list of range
-list_iter([[1,5],[6,9]]) -> 1 2 3 4 5 6 7 8 9
+range_iter([[1,5],[6,9]]) -> 1 2 3 4 5 6 7 8 9
 '''
-class list_iter:
+class range_iter:
 	list = 0
-	list_iter = 0
+	range_iter = 0
 	current = 0
 	end = 0
 	step = 1
@@ -166,8 +182,8 @@ class list_iter:
 		return self
 
 	def reset(self):
-		self.list_iter = iter(self.list)
-		self.current,self.end = self.list_iter.next()
+		self.range_iter = iter(self.list)
+		self.current,self.end = self.range_iter.next()
 
 	def next(self):
 		if self.current<=self.end:
@@ -175,7 +191,7 @@ class list_iter:
 			self.current = self.current + self.step
 			return current
 		else:
-			self.current,self.end = self.list_iter.next()
+			self.current,self.end = self.range_iter.next()
 			return self.next()
 
 '''
@@ -209,8 +225,6 @@ class ipport_iter:
 			ret =  (ipint2str(self.current_ip),self.port_iter.next())
 		return ret
 
-# # # # # # # # # # # # # # # # # # # # # # 
-
 '''
 
 #range list
@@ -231,21 +245,41 @@ ports =
 
 '''
 
-def iter_factory(ips,ports):
-	ip_iter = list_iter(ips)
-	port_iter = list_iter(ports)
+def ipport_iter_factory(ips,ports):
+	ip_iter = range_iter(ips)
+	port_iter = range_iter(ports)
 	return ipport_iter(ip_iter,port_iter)
 
 # # # # # # # # # # # # # # # # # # # # # # 
 
 # use func
 
+import string
+
 s_ips = []
 s_ports = []
 s_addrlist = []
-s_timeout = 5
-s_thread = 100
-s_result = []
+
+def hostlist_isnull():
+	global s_ips,s_ports,s_addrlist
+	return (len(s_ips)==0 or len(s_ports)==0) and len(s_addrlist)==0 
+
+def host_iterator():
+	global s_ips,s_ports,s_addrlist
+	if hostlist_isnull():
+		return False
+	iter1 = 0
+	try:
+		iter1 = ipport_iter_factory(s_ips,s_ports)
+	except:
+		pass
+	iter2 = iter(s_addrlist)
+	iterlist = []
+	if iter1:
+		iterlist.append(iter1)
+	if iter2:
+		iterlist.append(iter2)
+	return iterlist_iter(iterlist)
 
 def addip(ipstart_str,ipend_str=''):
 	global s_ips
@@ -292,7 +326,6 @@ def addport(portstart,portend=0):
 	item = [portstart,portend]
 	s_ports.append(item)
 
-import string
 def readportlist(listfile):
 	print 'File',listfile,
 	try:
@@ -354,6 +387,10 @@ def readaddrlist(listfile):
 		addaddr(ip,port)
 	print 'Add',total,'addr'
 
+def addresult():
+	global s_addrlist,s_result
+	s_addrlist.extend(s_result)
+
 def cleanip():
 	global s_ips
 	s_ips = []
@@ -366,6 +403,24 @@ def cleanaddr():
 	global s_addrlist
 	s_addrlist = []
 
+def host():
+	global s_ips,s_ports,s_addrlist
+	print '\nHosts:'
+	print ' ips:'
+	for ip1,ip2 in s_ips:
+		print '   [\'%s\',\'%s\']' % ( ipint2str(ip1),ipint2str(ip2) )
+	print ' ports:'
+	for port1,port2 in s_ports:
+		print '   [\'%s\',\'%s\']' % ( port1,port2 )
+	print ' addrs:'
+	for ip,port in s_addrlist:
+		print '   [\'%s\':%d]' % ( ip,port )
+	print ''
+
+s_timeout = 5
+s_thread = 100
+s_result = []
+
 def settimeout(value):
 	global s_timeout
 	s_timeout = value
@@ -373,6 +428,11 @@ def settimeout(value):
 def setthread(value):
 	global s_thread
 	s_thread = value
+
+def status():
+	print ' Timeout:',s_timeout
+	print ' Thread:',s_thread
+	print ''
 
 def save(path):
 	global s_result
@@ -385,74 +445,139 @@ def save(path):
 	except:
 		print 'Save Failed'
 
-def status():
-	global s_ips,s_ports,s_timeout,s_thread,s_addrlist
-	print '\nStatus:'
-	print ' ips:'
-	for ip1,ip2 in s_ips:
-		print '   [\'%s\',\'%s\']' % ( ipint2str(ip1),ipint2str(ip2) )
-	print ' ports:'
-	for port1,port2 in s_ports:
-		print '   [\'%s\',\'%s\']' % ( port1,port2 )
-	print ' addrs:'
-	for ip,port in s_addrlist:
-		print '   [\'%s\':%d]' % ( ip,port )
-	print ' Timeout:',s_timeout
-	print ' Thread:',s_thread
-	print ''
-
 import time
 def scan():
-	global s_thread,s_timeout,s_ips,s_ports,s_addrlist,s_result
+	global s_thread,s_timeout,s_result
 
-	if (len(s_ips)==0 or len(s_ports)==0) and len(s_addrlist)==0 :
-		sys.stdout.write ('You Scan Nothing\n')
+	host_iter = host_iterator()
+	
+	if not host_iter:
+		print 'Host list Empty, Please check'
 		return
 
-	conn1 = 0
-	conn2 = 0
-	try:
-		ipport_iter = iter_factory(s_ips,s_ports)
-		conn1 = portchecker(ipport_iter,s_timeout)
-	except:
-		pass
-
-	if len(s_addrlist):
-		conn2 = portchecker(iter(s_addrlist),s_timeout)
-
-	s_result = []
+	conn = portchecker(host_iter,s_timeout)
+	r = runner(conn)
 
 	t =  time.clock()
-	if conn1:
-		r1 = runner(conn1)
-		open_threads(r1,s_thread)
-		s_result.extend(conn1.result)
-	if conn2:
-		r2 = runner(conn2)
-		open_threads(r2,s_thread)
-		s_result.extend(conn2.result)
+	open_threads(r,s_thread)
+	s_result = conn.result
 	t = time.clock() - t
 
 	sys.stdout.write( '\nTotal Time: %.4lfs\n'%(t) )
 
+class data_sender:
+	data = 0
+	timeout = 0
+	host_iter = 0
+	iter_mutex = 0
+
+	def __init__(self,data,timeout = 5):
+		self.data = data
+		self.timeout = timeout
+		self.host_iter = host_iterator()
+		self.iter_mutex = threading.Lock()
+
+	def senddata(self,ip,port):
+		s = socket.socket()
+		s.settimeout(self.timeout)
+		result = False
+		try:
+			s.connect((ip,port))
+			s.send(self.data)
+			result = True
+		except:
+			pass
+		s.close()
+		return result
+
+	def __call__(self):
+		ip = 0
+		port = 0
+		self.iter_mutex.acquire()
+		try:
+			ip,port = self.host_iter.next()
+		except:
+			self.host_iter = host_iterator()
+			ip,port = self.host_iter.next()
+		self.iter_mutex.release()
+		if self.senddata(ip,port):
+			sys.stdout.write('#')
+		else:
+			sys.stdout.write('!')
+		return True
+
+import os
+
+def loadfile(filepath):
+	data = 0
+	try:
+		f = open(filepath,'r')
+		len = os.path.getsize(filepath)
+		data = f.read(len)
+	except:
+		pass
+	return data
+
+def loadport(port):
+	data = 0
+	try:
+		s = socket.socket()
+		s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+		s.bind(('localhost',port))
+		s.listen(1)
+		ac,addr = s.accept()
+		recvlen = 8192
+		data = ''
+		while True:
+			buf = ac.recv(8192)
+			data += buf
+			if len(buf)!=recvlen:
+				break
+		s.close()
+		ac.close()
+	except:
+		pass
+	return data
+
+def senddata(data):
+	if hostlist_isnull():
+		print 'Host list Empty, Please check'
+		return
+	if len(data)==0:
+		print 'Data is Empty, Please check'
+		return
+	global s_timeout,s_thread
+	ds = data_sender(data,s_timeout)
+	r = runner(ds)
+	open_threads(r,s_thread)
+
 def help():
-	print '-------Rattlesnake 1.1 By Chaser---------'
+	print '-------Rattlesnake 1.2 By Chaser---------'
 	print 'I\'m a Port Scanner in Python (PC or Android)\n'
 	print 'usage: python -i me.py\n'
+	print 'hosts:'
 	print '	addip(ip,[endip]): add ip range'
 	print '	addport(port,[endport]): add port range'
-	print '	addaddr(ip,port): add addr (ip,port)\n'
+	print '	addaddr(ip,port): add addr (ip,port)'
+	print '	addresult(): add scan result to addr list\n'
 	print '	readiplist(listfile): read ip list from file'
 	print '	readportlist(listfile): read port list from file'
 	print '	readaddrlist(listfile): read addr list from file\n'
 	print '	cleanip(): clean ip range list'
 	print '	cleanport(): clean port range list'
 	print '	cleanaddr(): clean addr list\n'
+	print '	host(): watch the hosts you set\n'
+	print 'settings:'
 	print '	setthread(value): set thread num'
 	print '	settimeout(value): set timeout value\n'
-	print '	status(): watch the value you set\n'
-	print '	scan(): you can start it if all setting done\n'
-	print '	save(filepath): save all your scan to file\n'
+	print '	status(): watch the setting value you set\n'
+	print 'actions:'
+	print '	scan(): scanning hosts\n'
+	print '	data = loadfile(filepath): load file,get data'
+	print '	data = loadport(portnum): listen on port,get data'
+	print '	senddata(data): send data to hosts\n'
+	print '	save(filepath): save scan result to file\n'
+	print 'others:'
 	print '	help(): call this page\n'
 
 if __name__ == '__main__':
