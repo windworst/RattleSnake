@@ -10,7 +10,7 @@ def checkproxy(ip,port):
 		s.connect((ip,port))
 		s.send(get)
 		data = s.recv(8192)
-		if 'baidu.com' in data:
+		if 'BAIDUID' in data:
 			result = '%s:%d' % (ip,port)
 	except:
 		pass
