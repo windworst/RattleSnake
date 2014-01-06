@@ -506,6 +506,7 @@ class data_sender:
 			sys.stdout.write('#')
 		else:
 			sys.stdout.write('!')
+		sys.stdout.flush()
 		return True
 
 import os
