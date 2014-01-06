@@ -22,7 +22,7 @@ if '127' in ip_str >=0 :
 			ip_str = getipaddr('wlan0')
 		except:
 			pass
-		pass
+
 print 'Your ip:',ip_str
 ipvalue = ipstr2int(ip_str)
 ip1 = ipvalue - ipvalue % 256 + 1
