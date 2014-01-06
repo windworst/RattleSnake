@@ -318,7 +318,7 @@ def readiplist(listfile):
 		else:
 			break
 	print 'Add',total,'ip range'
-	return True
+	return total
 
 def addport(portstart,portend=0):
 	global s_ports
@@ -356,7 +356,7 @@ def readportlist(listfile):
 		else:
 			break
 	print 'Add',total,'port range'
-	return True
+	return total
 
 def addaddr(ip,port):
 	global s_addrlist
@@ -388,7 +388,7 @@ def readaddrlist(listfile):
 		port = string.atoi(port)
 		addaddr(ip,port)
 	print 'Add',total,'addr'
-	return True
+	return total
 
 def addresult():
 	global s_addrlist,s_result
@@ -524,7 +524,7 @@ def loadport(port):
 	try:
 		s = socket.socket()
 		s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-		s.bind(('localhost',port))
+		s.bind(('0.0.0.0',port))
 		s.listen(1)
 		ac,addr = s.accept()
 		recvlen = 8192
