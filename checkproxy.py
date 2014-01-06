@@ -25,10 +25,11 @@ def proxyscan():
 	conn.connect = checkproxy
 	rscan.rscanner(conn)
 
+savepath = 'proxylist.txt'
+
 import os
-if rscan.readaddrlist('proxylist.txt'):
+if rscan.readaddrlist(savepath):
 	proxyscan()
-	savepath = 'usableproxy.txt'
 	try:
 		os.remove(savepath)
 	except:
