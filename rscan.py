@@ -39,16 +39,16 @@ def open_threads(runner,thread_num):
 
 class runner:
 	still_run = False
-	connector = 0
+	instance = 0
 
 	#args: start instance in multi-threads
-	def __init__(self,connector):
-		self.connector = connector
+	def __init__(self,instance):
+		self.instance = instance
 		self.still_run = False
 
 	def run(self):
 		while self.still_run:
-			if not self.connector():
+			if not self.instance():
 				break
 
 # # # # # # Socket Function # # # # # # # # 
