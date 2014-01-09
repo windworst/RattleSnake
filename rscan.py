@@ -433,6 +433,7 @@ def setthread(value):
 	s_thread = value
 
 def status():
+	print 'Status:'
 	print ' Timeout:',s_timeout
 	print ' Thread:',s_thread
 	print ''
