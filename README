@@ -9,11 +9,11 @@ You can use it to scan open port of network hosts in the ip range you set,and sa
 Command-Line Option
 ===================
 addip(): add ip range you will scan
-	eg:  addip('192.168.1.1')
-		 addip('192.168.1.1','192.168.255.255')
+  eg:  addip('192.168.1.1')
+     addip('192.168.1.1','192.168.255.255')
 addport(): add port range you will scan
-	eg:	 addport(80)
-		 addport(135,139)
+  eg:   addport(80)
+     addport(135,139)
 You can use help() to learn more
 
 
@@ -22,15 +22,15 @@ Versions History
 
 *Version 1.2
 add: senddata to hosts
-	 support load data from file/socket
-	 and send data to hosts in list until you Ctrl+C
+   support load data from file/socket
+   and send data to hosts in list until you Ctrl+C
 
 *Version 1.1
 add: addr (ip:port) check. (before is ip-ranges & port-ranges scan) 
 add: read list from file: read***list(listfile)
-	read ip ranges from file
-	read port ranges from file
-	read addr list from file
+  read ip ranges from file
+  read port ranges from file
+  read addr list from file
 
 *Version 1.0
 First release
