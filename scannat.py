@@ -14,23 +14,24 @@ def getipaddr(ifname):
   )[20:24])
 
 ip_str = socket.gethostbyname(socket.gethostname())
-if '127' in ip_str >=0 :
+if '127' == ip_str[0:3] :
   try:
     ip_str = getipaddr('eth0')
   except:
     try:
       ip_str = getipaddr('wlan0')
     except:
-      pass
+      print ('Get ip error')
+      quit()
 
-print 'Your ip:',ip_str
+print('Your ip:',ip_str)
 ipvalue = ipstr2int(ip_str)
 ip1 = ipvalue - ipvalue % 256 + 1
 ip2 = ip1 + 254
 ipstart_str = ipint2str(ip1)
 ipend_str = ipint2str(ip2)
-print 'Your nat ip range is: %s - %s' % (ipstart_str,ipend_str)
-print 'Start RattleSnake!!!!!'
+print('Your nat ip range is: %s - %s' % (ipstart_str,ipend_str))
+print('Start RattleSnake!!!!!')
 addip(ipstart_str,ipend_str)
 addport(21)
 addport(23)

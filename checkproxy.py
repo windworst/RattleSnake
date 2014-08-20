@@ -19,7 +19,7 @@ def checkproxy(ip,port):
 def proxyscan():
   host_iter = rscan.host_iterator()
   if not host_iter:
-    print 'None Proxy Host'
+    print('None Proxy Host')
     return
   conn = rscan.portchecker(host_iter,rscan.s_timeout)
   conn.connect = checkproxy

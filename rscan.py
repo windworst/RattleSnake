@@ -120,7 +120,7 @@ class portchecker:
     port = 0
     try:
       self.iter_mutex.acquire()
-      ip,port = self.ipport_iter.next()
+      ip,port = next(self.ipport_iter)
     except:
       return False
     finally:  
@@ -152,15 +152,15 @@ class iterlist_iter:
   iterlist_iter = 0
   def __init__(self,iterator_list):
     self.iterlist_iter = iter(iterator_list)
-    self.current = self.iterlist_iter.next()
+    self.current = next(self.iterlist_iter)
   def __self__(self):
     return self
-  def next(self):
+  def __next__(self):
     try:
-      return self.current.next()
+      return next(self.current)
     except:
-      self.current = self.iterlist_iter.next()
-    return self.current.next()
+      self.current = next(self.iterlist_iter)
+    return next(self.current)
 
 '''
 list iterator
@@ -183,16 +183,16 @@ class range_iter:
 
   def reset(self):
     self.range_iter = iter(self.list)
-    self.current,self.end = self.range_iter.next()
+    self.current,self.end = next(self.range_iter)
 
-  def next(self):
+  def __next__(self):
     if self.current<=self.end:
       current = self.current
       self.current = self.current + self.step
       return current
     else:
-      self.current,self.end = self.range_iter.next()
-      return self.next()
+      self.current,self.end = next(self.range_iter)
+      return next(self)
 
 '''
 IP+Port Iterator
@@ -214,15 +214,15 @@ class ipport_iter:
   def reset(self):
     self.ip_iter.reset()
     self.port_iter.reset()
-    self.current_ip = self.ip_iter.next()
+    self.current_ip = next(self.ip_iter)
 
-  def next(self):
+  def __next__(self):
     try:
-      ret = (ipint2str(self.current_ip),self.port_iter.next())
+      ret = (ipint2str(self.current_ip),next(self.port_iter))
     except:
-      self.current_ip = self.ip_iter.next()
+      self.current_ip = next(self.ip_iter)
       self.port_iter.reset()
-      ret =  (ipint2str(self.current_ip),self.port_iter.next())
+      ret =  (ipint2str(self.current_ip),next(self.port_iter))
     return ret
 
 '''
@@ -292,12 +292,12 @@ def addip(ipstart_str,ipend_str=''):
   s_ips.append(item)
 
 def readiplist(listfile):
-  print 'File',listfile,
+  print('File',listfile)
   try:
     f = open(listfile,'r')
-    print 'Read Success',
+    print('Read Success')
   except:
-    print 'Read Failed'
+    print('Read Failed')
     return False
   total = 0
   for line in f.readlines():
@@ -307,8 +307,8 @@ def readiplist(listfile):
     ip2 = 0
     ips_iter = iter(line.split(' '))
     try:
-      ip1 = ips_iter.next()
-      ip2 = ips_iter.next()
+      ip1 = next(ips_iter)
+      ip2 = next(ips_iter)
     except:
       ip2 = ip1
 
@@ -317,7 +317,7 @@ def readiplist(listfile):
       addip(ip1,ip2)
     else:
       break
-  print 'Add',total,'ip range'
+  print('Add',total,'ip range')
   return total
 
 def addport(portstart,portend=0):
@@ -328,12 +328,12 @@ def addport(portstart,portend=0):
   s_ports.append(item)
 
 def readportlist(listfile):
-  print 'File',listfile,
+  print('File',listfile)
   try:
     f = open(listfile,'r')
-    print 'Read Success',
+    print('Read Success')
   except:
-    print 'Read Failed'
+    print('Read Failed')
     return False
   total = 0
   for line in f.readlines():
@@ -343,8 +343,8 @@ def readportlist(listfile):
     port2 = 0
     ports_iter = iter(line.split(' '))
     try:
-      port1 = ports_iter.next()
-      port2 = ports_iter.next()
+      port1 = next(ports_iter)
+      port2 = next(ports_iter)
     except:
       port2 = port1
 
@@ -355,7 +355,7 @@ def readportlist(listfile):
       addport(port1,port2)
     else:
       break
-  print 'Add',total,'port range'
+  print('Add',total,'port range')
   return total
 
 def addaddr(ip,port):
@@ -364,12 +364,12 @@ def addaddr(ip,port):
   s_addrlist.append(item)
 
 def readaddrlist(listfile):
-  print 'File',listfile,
+  print('File',listfile)
   try:
     f = open(listfile,'r')
-    print 'Read Success',
+    print('Read Success')
   except:
-    print 'Read Failed'
+    print('Read Failed')
     return False
   total = 0
   for line in f.readlines():
@@ -379,15 +379,15 @@ def readaddrlist(listfile):
     port = 0
     addr_iter = iter(line.split(':'))
     try:
-      ip = addr_iter.next()
-      port = addr_iter.next()
+      ip = next(addr_iter)
+      port = next(addr_iter)
     except:
       break
 
     total += 1
     port = string.atoi(port)
     addaddr(ip,port)
-  print 'Add',total,'addr'
+  print('Add',total,'addr')
   return total
 
 def addresult():
@@ -408,17 +408,17 @@ def cleanaddr():
 
 def host():
   global s_ips,s_ports,s_addrlist
-  print '\nHosts:'
-  print ' ips:'
+  print('\nHosts:')
+  print(' ips:')
   for ip1,ip2 in s_ips:
-    print '   [\'%s\',\'%s\']' % ( ipint2str(ip1),ipint2str(ip2) )
-  print ' ports:'
+    print('   [\'%s\',\'%s\']' % ( ipint2str(ip1),ipint2str(ip2) ))
+  print(' ports:')
   for port1,port2 in s_ports:
-    print '   [\'%s\',\'%s\']' % ( port1,port2 )
-  print ' addrs:'
+    print('   [\'%s\',\'%s\']' % ( port1,port2 ))
+  print(' addrs:')
   for ip,port in s_addrlist:
-    print '   [\'%s\':%d]' % ( ip,port )
-  print ''
+    print('   [\'%s\':%d]' % ( ip,port ))
+  print('')
 
 s_timeout = 5
 s_thread = 100
@@ -433,21 +433,21 @@ def setthread(value):
   s_thread = value
 
 def status():
-  print 'Status:'
-  print ' Timeout:',s_timeout
-  print ' Thread:',s_thread
-  print ''
+  print('Status:')
+  print(' Timeout:',s_timeout)
+  print(' Thread:',s_thread)
+  print('')
 
 def save(path):
   global s_result
   try:
-    print 'File',path,
+    print('File',path)
     output = open(path,'a')
     for s in s_result:
       output.write(s+'\n')
-    print 'Save Success'
+    print('Save Success')
   except:
-    print 'Save Failed'
+    print('Save Failed')
 
 import time
 def rscanner(conn):
@@ -463,7 +463,7 @@ def scan():
   global s_timeout
   host_iter = host_iterator()
   if not host_iter:
-    print 'Host list Empty, Please check'
+    print('Host list Empty, Please check')
     return
   conn = portchecker(host_iter,s_timeout)
   rscanner(conn)
@@ -498,10 +498,10 @@ class data_sender:
     port = 0
     self.iter_mutex.acquire()
     try:
-      ip,port = self.host_iter.next()
+      ip,port = next(self.host_iter)
     except:
       self.host_iter = host_iterator()
-      ip,port = self.host_iter.next()
+      ip,port = next(self.host_iter)
     self.iter_mutex.release()
     if self.senddata(ip,port):
       sys.stdout.write('#')
@@ -544,10 +544,10 @@ def loadport(port):
 
 def senddata(data):
   if hostlist_isnull():
-    print 'Host list Empty, Please check'
+    print('Host list Empty, Please check')
     return
   if len(data)==0:
-    print 'Data is Empty, Please check'
+    print('Data is Empty, Please check')
     return
   global s_timeout,s_thread
   ds = data_sender(data,s_timeout)
@@ -555,33 +555,33 @@ def senddata(data):
   open_threads(r,s_thread)
 
 def help():
-  print '-------Rattlesnake 1.2 By Chaser---------'
-  print 'I\'m a Port Scanner in Python (PC or Android)\n'
-  print 'usage: python -i me.py\n'
-  print 'hosts:'
-  print '  addip(ip,[endip]): add ip range'
-  print '  addport(port,[endport]): add port range'
-  print '  addaddr(ip,port): add addr (ip,port)'
-  print '  addresult(): add scan result to addr list\n'
-  print '  readiplist(listfile): read ip list from file'
-  print '  readportlist(listfile): read port list from file'
-  print '  readaddrlist(listfile): read addr list from file\n'
-  print '  cleanip(): clean ip range list'
-  print '  cleanport(): clean port range list'
-  print '  cleanaddr(): clean addr list\n'
-  print '  host(): watch the hosts you set\n'
-  print 'settings:'
-  print '  setthread(value): set thread num'
-  print '  settimeout(value): set timeout value\n'
-  print '  status(): watch the setting value you set\n'
-  print 'actions:'
-  print '  scan(): scanning hosts\n'
-  print '  data = loadfile(filepath): load file,get data'
-  print '  data = loadport(portnum): listen on port,get data'
-  print '  senddata(data): send data to hosts\n'
-  print '  save(filepath): save scan result to file\n'
-  print 'others:'
-  print '  help(): call this page\n'
+  print('-------Rattlesnake 1.2 By Chaser---------')
+  print('I\'m a Port Scanner in Python (PC or Android)\n')
+  print('usage: python -i me.py\n')
+  print('hosts:')
+  print('  addip(ip,[endip]): add ip range')
+  print('  addport(port,[endport]): add port range')
+  print('  addaddr(ip,port): add addr (ip,port)')
+  print('  addresult(): add scan result to addr list\n')
+  print('  readiplist(listfile): read ip list from file')
+  print('  readportlist(listfile): read port list from file')
+  print('  readaddrlist(listfile): read addr list from file\n')
+  print('  cleanip(): clean ip range list')
+  print('  cleanport(): clean port range list')
+  print('  cleanaddr(): clean addr list\n')
+  print('  host(): watch the hosts you set\n')
+  print('settings:')
+  print('  setthread(value): set thread num')
+  print('  settimeout(value): set timeout value\n')
+  print('  status(): watch the setting value you set\n')
+  print('actions:')
+  print('  scan(): scanning hosts\n')
+  print('  data = loadfile(filepath): load file,get data')
+  print('  data = loadport(portnum): listen on port,get data')
+  print('  senddata(data): send data to hosts\n')
+  print('  save(filepath): save scan result to file\n')
+  print('others:')
+  print('  help(): call this page\n')
 
 if __name__ == '__main__':
   help()
